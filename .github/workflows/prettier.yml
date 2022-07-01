@@ -1,7 +1,5 @@
 name: Validate PR
-on:
-    pull_request:
-        branches: [ master ]
+on: [ push ]
 jobs:
     check_formatting:
         runs-on: ubuntu-latest
@@ -12,7 +10,7 @@ jobs:
               with:
                 dotnet-version: '6.0.x'
             - run: |
-              dotnet tool restore
-              dotnet tool install csharpier
-              dotnet csharpier --check
+                dotnet tool restore
+                dotnet tool install csharpier
+                dotnet csharpier --check
 
