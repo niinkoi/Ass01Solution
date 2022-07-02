@@ -1,4 +1,5 @@
 ﻿using BusinessObject;
+using DataAccess.extensions;
 using DataAccess.utils;
 using System;
 using System.Collections.Generic;
@@ -101,9 +102,12 @@ namespace DataAccess
             try
             {
                 var found = GetMemberById(member.MemberID);
-                if (found == null)
+                List<string> errorList = member.Validate(Validation.MEMBER_VALDIATION);
+                if (errorList.Count == 0)
                 {
-                    var parameters = new List<SqlParameter>()
+                    if (found == null)
+                    {
+                        var parameters = new List<SqlParameter>()
                     {
                         _context.provider.CreateParameter("@MemberID", 16, member.MemberID, DbType.Guid),
                         _context.provider.CreateParameter("@MemberName", 50, member.MemberName, DbType.String),
@@ -112,11 +116,16 @@ namespace DataAccess
                         _context.provider.CreateParameter("@City", 20, member.City, DbType.String),
                         _context.provider.CreateParameter("@Country", 20, member.Country, DbType.String),
                     };
-                    _context.provider.ModifyData(Commands["Insert"], CommandType.Text, parameters.ToArray());
+                        _context.provider.ModifyData(Commands["Insert"], CommandType.Text, parameters.ToArray());
+                    }
+                    else
+                    {
+                        throw new Exception($"This member with ID: {member.MemberID} is already exist");
+                    }
                 }
                 else
                 {
-                    throw new Exception($"This member with ID: {member.MemberID} is already exist");
+                    throw new Exception("Invalid paramp");
                 }
             }
             catch (Exception e)
