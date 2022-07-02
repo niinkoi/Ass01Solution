@@ -23,7 +23,7 @@ namespace DataAccess.extensions
 
         public string? GetMessage(MemberObject obj) => _predicate.Equals(obj) ? _message : null;
 
-        private static readonly string EMAIL_REGEX = @"[a-z0-9!#$%&'*+/=?^_`{|}~-]"
+        public static readonly string EMAIL_REGEX = @"[a-z0-9!#$%&'*+/=?^_`{|}~-]"
                                 + @"+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9]"
                                 + @"(?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
 
