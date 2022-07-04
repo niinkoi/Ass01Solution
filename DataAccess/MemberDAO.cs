@@ -40,7 +40,7 @@ namespace DataAccess
                 {
                     membersList.Add(new()
                     {
-                        MemberID = reader.GetString(0),
+                        MemberID = reader.GetGuid(0).ToString(),
                         MemberName = reader.GetString(1),
                         Email = reader.GetString(2),
                         Password = reader.GetString(3),
@@ -69,14 +69,14 @@ namespace DataAccess
 
             try
             {
-                var param = _context.provider.CreateParameter("@MemberID", 16, guid, DbType.Guid);
+                var param = _context.provider.CreateParameter("@MemberID", 16, Guid.Parse(guid), DbType.Guid);
                 reader = _context.provider.GetDataReader(Commands["GetByID"], CommandType.Text, out _context.connection, param);
 
                 if (reader.Read())
                 {
                     found = new()
                     {
-                        MemberID = reader.GetString(0),
+                        MemberID = reader.GetGuid(0).ToString(),
                         MemberName = reader.GetString(1),
                         Email = reader.GetString(2),
                         Password = reader.GetString(3),
@@ -91,7 +91,6 @@ namespace DataAccess
             }
             finally
             {
-                reader.Close();
                 _context.provider.CloseConnection(_context.connection);
             }
             return found;
@@ -102,20 +101,20 @@ namespace DataAccess
             try
             {
                 var found = GetMemberById(member.MemberID);
-                List<string> errorList = member.Validate(Validation.MEMBER_VALDIATION);
+                List<string> errorList = member.Validate(Validation.MEMBER_VALDIATION).Where(item => item != null).ToList();
                 if (errorList.Count == 0)
                 {
                     if (found == null)
                     {
                         var parameters = new List<SqlParameter>()
-                    {
-                        _context.provider.CreateParameter("@MemberID", 16, member.MemberID, DbType.Guid),
-                        _context.provider.CreateParameter("@MemberName", 50, member.MemberName, DbType.String),
-                        _context.provider.CreateParameter("@Email", 50, member.Email, DbType.String),
-                        _context.provider.CreateParameter("@Password", 50, member.Password, DbType.String),
-                        _context.provider.CreateParameter("@City", 20, member.City, DbType.String),
-                        _context.provider.CreateParameter("@Country", 20, member.Country, DbType.String),
-                    };
+                        {
+                            _context.provider.CreateParameter("@MemberID", 16, Guid.Parse(member.MemberID), DbType.Guid),
+                            _context.provider.CreateParameter("@MemberName", 50, member.MemberName, DbType.String),
+                            _context.provider.CreateParameter("@Email", 50, member.Email, DbType.String),
+                            _context.provider.CreateParameter("@Password", 50, member.Password, DbType.String),
+                            _context.provider.CreateParameter("@City", 20, member.City, DbType.String),
+                            _context.provider.CreateParameter("@Country", 20, member.Country, DbType.String),
+                        };
                         _context.provider.ModifyData(Commands["Insert"], CommandType.Text, parameters.ToArray());
                     }
                     else
@@ -125,7 +124,7 @@ namespace DataAccess
                 }
                 else
                 {
-                    throw new Exception("Invalid paramp");
+                    throw new Exception(errorList.MergeErrors());
                 }
             }
             catch (Exception e)
@@ -140,28 +139,37 @@ namespace DataAccess
 
         public void Update(MemberObject member)
         {
+
             try
             {
                 var found = GetMemberById(member.MemberID);
-                if (found != null)
+                List<string> errorList = member.Validate(Validation.MEMBER_VALDIATION).Where(item => item != null).ToList();
+                if (errorList.Count == 0)
                 {
-                    var parameters = new List<SqlParameter>()
+                    if (found != null)
                     {
-                        _context.provider.CreateParameter("@MemberID", 16, member.MemberID, DbType.Guid),
-                        _context.provider.CreateParameter("@MemberName", 50, member.MemberName, DbType.String),
-                        _context.provider.CreateParameter("@Email", 50, member.Email, DbType.String),
-                        _context.provider.CreateParameter("@Password", 50, member.Password, DbType.String),
-                        _context.provider.CreateParameter("@City", 20, member.City, DbType.String),
-                        _context.provider.CreateParameter("@Country", 20, member.Country, DbType.String),
-                    };
-                    _context.provider.ModifyData(Commands["Update"], CommandType.Text, parameters.ToArray());
+                        var parameters = new List<SqlParameter>()
+                        {
+                            _context.provider.CreateParameter("@MemberID", 16, Guid.Parse(member.MemberID), DbType.Guid),
+                            _context.provider.CreateParameter("@MemberName", 50, member.MemberName, DbType.String),
+                            _context.provider.CreateParameter("@Email", 50, member.Email, DbType.String),
+                            _context.provider.CreateParameter("@Password", 50, member.Password, DbType.String),
+                            _context.provider.CreateParameter("@City", 20, member.City, DbType.String),
+                            _context.provider.CreateParameter("@Country", 20, member.Country, DbType.String),
+                        };
+                        _context.provider.ModifyData(Commands["Update"], CommandType.Text, parameters.ToArray());
+                    }
+                    else
+                    {
+                        throw new Exception($"This member with ID: {member.MemberID} dose not exist");
+                    }
                 }
                 else
                 {
-                    throw new Exception($"This member with ID: {member.MemberID} does not exist");
+                    throw new Exception(errorList.MergeErrors());
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 throw new Exception(e.Message);
             }
@@ -178,7 +186,7 @@ namespace DataAccess
                 var found = GetMemberById(theId);
                 if (found != null)
                 {
-                    var param = _context.provider.CreateParameter("@MemberID", 16, theId, DbType.Guid);
+                    var param = _context.provider.CreateParameter("@MemberID", 16, Guid.Parse(theId), DbType.Guid);
                     _context.provider.ModifyData(Commands["Delete"], CommandType.Text, param);
                 }
             }
