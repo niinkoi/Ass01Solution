@@ -22,7 +22,7 @@ namespace MyStoreWinApp
 
             if (service.IsLogined(email, password) || IsDefaultAccount(email, password))
             {
-                ShowInvalidMessage("Login successfully");
+                this.Close();
             }
             else
             {
